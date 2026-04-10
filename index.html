@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>バースデーカード作成</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif;
+    background: #f0f2f5;
+    padding: 12px;
+    min-height: 100vh;
+  }
+  h1 { text-align: center; color: #333; margin-bottom: 12px; font-size: 1.2rem; }
+  .container {
+    display: flex; flex-direction: column; gap: 12px;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .panel {
+    background: #fff; border-radius: 12px; padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%;
+  }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-weight: bold; margin-bottom: 6px; color: #444; font-size: 0.875rem; }
+  .field input, .field textarea {
+    width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+    font-size: 16px; font-family: inherit; -webkit-appearance: none; appearance: none;
+  }
+  .field textarea { height: 100px; resize: vertical; line-height: 1.8; }
+  .field input:focus, .field textarea:focus {
+    outline: none; border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15);
+  }
+  .hint { font-size: 0.75rem; color: #888; margin-top: 4px; }
+  .btn-group { display: flex; gap: 10px; }
+  .btn {
+    flex: 1; padding: 14px; border: none; border-radius: 8px;
+    font-size: 1rem; font-weight: bold; cursor: pointer;
+    -webkit-appearance: none; appearance: none; transition: opacity 0.2s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-preview { background: #e74c3c; color: #fff; }
+  .btn-download { background: #27ae60; color: #fff; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #previewCanvas { width: 100%; height: auto; display: block; border-radius: 8px; }
+  .loading { text-align: center; padding: 30px; color: #999; font-size: 0.875rem; }
+
+  @media (min-width: 769px) {
+    body { padding: 24px; }
+    h1 { font-size: 1.4rem; margin-bottom: 20px; }
+    .container { flex-direction: row; gap: 24px; align-items: flex-start; }
+    .input-panel { flex: 0 0 360px; }
+    .preview-panel { flex: 1; min-width: 0; }
+    .panel { padding: 24px; }
+    .field textarea { height: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🎂 バースデーカード作成</h1>
+
+<div class="container">
+  <div class="panel input-panel">
+    <div class="field">
+      <label>宛名（上部・中央揃え）</label>
+      <input type="text" id="recipientName" placeholder="例: 玉木さん" />
+      <div class="hint">大きめ太字で表示されます</div>
+    </div>
+    <div class="field">
+      <label>メッセージ（中央・左揃え）</label>
+      <textarea id="messageBody" placeholder="例:&#10;お誕生日おめでとうございます♡&#10;いつもありがとうございます。&#10;これからもお身体に気をつけて&#10;頑張ってください！！！"></textarea>
+      <div class="hint">改行はそのまま反映されます</div>
+    </div>
+    <div class="field">
+      <label>送り主（下部・左揃え）</label>
+      <input type="text" id="senderName" placeholder="例: ももかより(@momo__kokumin)" />
+      <div class="hint">本文と同じサイズで表示されます</div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-preview" onclick="renderCard()">プレビュー</button>
+      <button class="btn btn-download" id="btnDownload" onclick="downloadCard()" disabled>画像を保存</button>
+    </div>
+  </div>
+
+  <div class="panel preview-panel">
+    <div class="loading" id="loadingMsg">テンプレート画像を読み込み中...</div>
+    <canvas id="previewCanvas" style="display:none;"></canvas>
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('previewCanvas');
+  var ctx = canvas.getContext('2d');
+  var templateImg = new Image();
+
+  // --- テンプレート画像を直接読み込み ---
+  templateImg.onload = function() {
+    canvas.width = templateImg.width;
+    canvas.height = templateImg.height;
+    ctx.drawImage(templateImg, 0, 0);
+    document.getElementById('loadingMsg').style.display = 'none';
+    canvas.style.display = 'block';
+  };
+  templateImg.onerror = function() {
+    document.getElementById('loadingMsg').textContent = 'エラー: 画像を読み込めませんでした';
+  };
+  templateImg.src = 'template.jpg';
+
+  // --- テキスト折り返し ---
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    var lines = text.split('\n');
+    var drawY = y;
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var currentLine = '';
+      for (var j = 0; j < line.length; j++) {
+        var testLine = currentLine + line[j];
+        if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+          ctx.fillText(currentLine, x, drawY);
+          currentLine = line[j];
+          drawY += lineHeight;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      ctx.fillText(currentLine, x, drawY);
+      drawY += lineHeight;
+    }
+  }
+
+  // --- カード描画 ---
+  function renderCard() {
+    if (!templateImg.complete) return;
+
+    var recipient = document.getElementById('recipientName').value;
+    var message   = document.getElementById('messageBody').value;
+    var sender    = document.getElementById('senderName').value;
+
+    var W = canvas.width;
+    var H = canvas.height;
+
+    ctx.drawImage(templateImg, 0, 0);
+
+    var nameBox   = { x: W * 0.10, y: H * 0.18, w: W * 0.80, h: H * 0.12 };
+    var msgBox    = { x: W * 0.10, y: H * 0.33, w: W * 0.80, h: H * 0.42 };
+    var senderBox = { x: W * 0.10, y: H * 0.78, w: W * 0.80, h: H * 0.10 };
+
+    // 宛名
+    var fs1 = Math.round(H * 0.085);
+    ctx.font = 'bold ' + fs1 + 'px "Hiragino Sans", "Meiryo", sans-serif';
+    ctx.fillStyle = '#222';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(recipient, nameBox.x + nameBox.w / 2, nameBox.y);
+
+    // メッセージ
+    var fs2 = Math.round(H * 0.058);
+    ctx.font = fs2 + 'px "Hiragino Sans", "Meiryo", sans-serif';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(msgBox.x, msgBox.y, msgBox.w, msgBox.h);
+    ctx.clip();
+    wrapText(ctx, message, msgBox.x, msgBox.y, msgBox.w, fs2 * 1.7);
+    ctx.restore();
+
+    // 送り主
+    var fs3 = Math.round(H * 0.058);
+    ctx.font = fs3 + 'px "Hiragino Sans", "Meiryo", sans-serif';
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(sender, senderBox.x, senderBox.y);
+
+    document.getElementById('btnDownload').disabled = false;
+
+    if (window.innerWidth < 769) {
+      document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  // --- 保存 ---
+  function downloadCard() {
+    canvas.toBlob(function(blob) {
+      var file = new File([blob], 'birthday_card.jpg', { type: 'image/jpeg' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file] }).catch(function() {});
+        return;
+      }
+
+      var link = document.createElement('a');
+      link.download = 'birthday_card.jpg';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }, 'image/jpeg', 0.92);
+  }
+</script>
+
+</body>
+</html>

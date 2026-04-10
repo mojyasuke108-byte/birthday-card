@@ -5,97 +5,218 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>バースデーカード作成</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600;700&display=swap');
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Meiryo', sans-serif;
-    background: #f0f2f5;
-    padding: 12px;
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    background: #000;
+    color: #fff;
     min-height: 100vh;
   }
-  h1 { text-align: center; color: #333; margin-bottom: 12px; font-size: 1.2rem; }
-  .container {
-    display: flex; flex-direction: column; gap: 12px;
-    max-width: 1200px; margin: 0 auto;
-  }
-  .panel {
-    background: #fff; border-radius: 12px; padding: 14px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%;
-  }
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-weight: bold; margin-bottom: 6px; color: #444; font-size: 0.875rem; }
-  .field input, .field textarea {
-    width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px;
-    font-size: 16px; font-family: inherit; -webkit-appearance: none; appearance: none;
-  }
-  .field textarea { height: 100px; resize: vertical; line-height: 1.8; }
-  .field input:focus, .field textarea:focus {
-    outline: none; border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.15);
-  }
-  .hint { font-size: 0.75rem; color: #888; margin-top: 4px; }
-  .btn-group { display: flex; gap: 10px; }
-  .btn {
-    flex: 1; padding: 14px; border: none; border-radius: 8px;
-    font-size: 1rem; font-weight: bold; cursor: pointer;
-    -webkit-appearance: none; appearance: none; transition: opacity 0.2s;
-  }
-  .btn:active { opacity: 0.7; }
-  .btn-preview { background: #e74c3c; color: #fff; }
-  .btn-download { background: #27ae60; color: #fff; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  #previewCanvas { width: 100%; height: auto; display: block; border-radius: 8px; }
-  .loading { text-align: center; padding: 30px; color: #999; font-size: 0.875rem; }
 
-  @media (min-width: 769px) {
-    body { padding: 24px; }
-    h1 { font-size: 1.4rem; margin-bottom: 20px; }
+  /* ── Navigation Glass ── */
+  .nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav span {
+    font-size: 12px; font-weight: 400; letter-spacing: -0.12px; color: rgba(255,255,255,0.8);
+  }
+
+  /* ── Hero Section ── */
+  .hero {
+    text-align: center;
+    padding: 80px 20px 60px;
+    background: #000;
+  }
+  .hero h1 {
+    font-size: 56px; font-weight: 600;
+    line-height: 1.07; letter-spacing: -0.28px;
+    color: #fff; margin-bottom: 12px;
+  }
+  .hero p {
+    font-size: 21px; font-weight: 400;
+    line-height: 1.19; letter-spacing: 0.231px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ── Main Content ── */
+  .main {
+    background: #f5f5f7;
+    padding: 48px 20px 60px;
+  }
+  .container {
+    max-width: 980px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+
+  /* ── Panels ── */
+  .panel {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px;
+    width: 100%;
+  }
+  .panel-title {
+    font-size: 21px; font-weight: 600;
+    line-height: 1.19; letter-spacing: 0.231px;
+    color: #1d1d1f; margin-bottom: 24px;
+  }
+
+  /* ── Form Fields ── */
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 14px; font-weight: 600;
+    line-height: 1.29; letter-spacing: -0.224px;
+    color: #1d1d1f; margin-bottom: 8px;
+  }
+  .field input, .field textarea {
+    width: 100%; padding: 12px 14px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 8px;
+    font-size: 17px; font-weight: 400;
+    line-height: 1.47; letter-spacing: -0.374px;
+    font-family: inherit;
+    color: #1d1d1f; background: #fafafc;
+    -webkit-appearance: none; appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field textarea { height: 120px; resize: vertical; }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 3px rgba(0,113,227,0.2);
+  }
+  .field input::placeholder, .field textarea::placeholder {
+    color: rgba(0,0,0,0.32);
+  }
+  .hint {
+    font-size: 12px; font-weight: 400;
+    line-height: 1.33; letter-spacing: -0.12px;
+    color: rgba(0,0,0,0.48); margin-top: 6px;
+  }
+
+  /* ── Buttons ── */
+  .btn-group { display: flex; gap: 12px; margin-top: 8px; }
+  .btn {
+    flex: 1; padding: 14px;
+    border: none; border-radius: 980px;
+    font-size: 17px; font-weight: 400;
+    letter-spacing: -0.374px;
+    font-family: inherit; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn-preview {
+    background: #0071e3; color: #fff;
+  }
+  .btn-download {
+    background: #1d1d1f; color: #fff;
+  }
+  .btn:disabled { opacity: 0.32; cursor: not-allowed; transform: none; }
+
+  /* ── Preview ── */
+  .preview-panel { position: relative; }
+  #previewCanvas {
+    width: 100%; height: auto; display: block; border-radius: 8px;
+  }
+  .loading {
+    text-align: center; padding: 60px 20px;
+    font-size: 14px; font-weight: 400;
+    letter-spacing: -0.224px;
+    color: rgba(0,0,0,0.48);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    background: #000;
+    text-align: center;
+    padding: 32px 20px;
+    font-size: 12px; font-weight: 400;
+    letter-spacing: -0.12px;
+    color: rgba(255,255,255,0.32);
+  }
+
+  /* ── Desktop ── */
+  @media (min-width: 834px) {
+    .hero h1 { font-size: 56px; }
     .container { flex-direction: row; gap: 24px; align-items: flex-start; }
-    .input-panel { flex: 0 0 360px; }
+    .input-panel { flex: 0 0 380px; }
     .preview-panel { flex: 1; min-width: 0; }
-    .panel { padding: 24px; }
-    .field textarea { height: 120px; }
+  }
+  @media (max-width: 833px) {
+    .hero { padding: 48px 20px 36px; }
+    .hero h1 { font-size: 32px; }
+    .hero p { font-size: 17px; }
+    .panel { padding: 20px; }
   }
 </style>
 </head>
 <body>
 
-<h1>🎂 バースデーカード作成</h1>
+<!-- Navigation Glass -->
+<div class="nav">
+  <span>バースデーカード</span>
+</div>
 
-<div class="container">
-  <div class="panel input-panel">
-    <div class="field">
-      <label>宛名（上部・中央揃え）</label>
-      <input type="text" id="recipientName" placeholder="例: 玉木さん" />
-      <div class="hint">大きめ太字で表示されます</div>
-    </div>
-    <div class="field">
-      <label>メッセージ（中央・左揃え）</label>
-      <textarea id="messageBody" placeholder="例:&#10;お誕生日おめでとうございます♡&#10;いつもありがとうございます。&#10;これからもお身体に気をつけて&#10;頑張ってください！！！"></textarea>
-      <div class="hint">改行はそのまま反映されます</div>
-    </div>
-    <div class="field">
-      <label>送り主（下部・左揃え）</label>
-      <input type="text" id="senderName" placeholder="例: ももかより(@momo__kokumin)" />
-      <div class="hint">本文と同じサイズで表示されます</div>
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-preview" onclick="renderCard()">プレビュー</button>
-      <button class="btn btn-download" id="btnDownload" onclick="downloadCard()" disabled>画像を保存</button>
-    </div>
-  </div>
+<!-- Hero -->
+<div class="hero">
+  <h1>バースデーカード作成</h1>
+  <p>大切な人へ、想いを届けよう。</p>
+</div>
 
-  <div class="panel preview-panel">
-    <div class="loading" id="loadingMsg">テンプレート画像を読み込み中...</div>
-    <canvas id="previewCanvas" style="display:none;"></canvas>
+<!-- Main -->
+<div class="main">
+  <div class="container">
+    <div class="panel input-panel">
+      <div class="panel-title">カード情報</div>
+      <div class="field">
+        <label>宛名</label>
+        <input type="text" id="recipientName" placeholder="例: 玉木さん" />
+        <div class="hint">上部に中央揃え・太字で表示されます</div>
+      </div>
+      <div class="field">
+        <label>メッセージ</label>
+        <textarea id="messageBody" placeholder="例:&#10;お誕生日おめでとうございます♡&#10;いつもありがとうございます。&#10;これからもお身体に気をつけて&#10;頑張ってください！！！"></textarea>
+        <div class="hint">改行はそのまま反映されます</div>
+      </div>
+      <div class="field">
+        <label>送り主</label>
+        <input type="text" id="senderName" placeholder="例: ももかより(@momo__kokumin)" />
+        <div class="hint">下部に左揃えで表示されます</div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-preview" onclick="renderCard()">プレビュー</button>
+        <button class="btn btn-download" id="btnDownload" onclick="downloadCard()" disabled>画像を保存</button>
+      </div>
+    </div>
+
+    <div class="panel preview-panel">
+      <div class="panel-title">プレビュー</div>
+      <div class="loading" id="loadingMsg">テンプレート画像を読み込み中...</div>
+      <canvas id="previewCanvas" style="display:none;"></canvas>
+    </div>
   </div>
 </div>
+
+<div class="footer">バースデーカード作成ツール</div>
 
 <script>
   var canvas = document.getElementById('previewCanvas');
   var ctx = canvas.getContext('2d');
   var templateImg = new Image();
 
-  // --- テンプレート画像を直接読み込み ---
   templateImg.onload = function() {
     canvas.width = templateImg.width;
     canvas.height = templateImg.height;
@@ -108,7 +229,6 @@
   };
   templateImg.src = 'template.jpg';
 
-  // --- テキスト折り返し ---
   function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     var lines = text.split('\n');
     var drawY = y;
@@ -130,32 +250,26 @@
     }
   }
 
-  // --- カード描画 ---
   function renderCard() {
     if (!templateImg.complete) return;
-
     var recipient = document.getElementById('recipientName').value;
     var message   = document.getElementById('messageBody').value;
     var sender    = document.getElementById('senderName').value;
-
-    var W = canvas.width;
-    var H = canvas.height;
+    var W = canvas.width, H = canvas.height;
 
     ctx.drawImage(templateImg, 0, 0);
 
-    var nameBox   = { x: W * 0.10, y: H * 0.18, w: W * 0.80, h: H * 0.12 };
-    var msgBox    = { x: W * 0.10, y: H * 0.33, w: W * 0.80, h: H * 0.42 };
-    var senderBox = { x: W * 0.10, y: H * 0.78, w: W * 0.80, h: H * 0.10 };
+    var nameBox   = { x: W*0.10, y: H*0.18, w: W*0.80 };
+    var msgBox    = { x: W*0.10, y: H*0.33, w: W*0.80, h: H*0.42 };
+    var senderBox = { x: W*0.10, y: H*0.78, w: W*0.80 };
 
-    // 宛名
     var fs1 = Math.round(H * 0.085);
     ctx.font = 'bold ' + fs1 + 'px "Hiragino Sans", "Meiryo", sans-serif';
     ctx.fillStyle = '#222';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(recipient, nameBox.x + nameBox.w / 2, nameBox.y);
+    ctx.fillText(recipient, nameBox.x + nameBox.w/2, nameBox.y);
 
-    // メッセージ
     var fs2 = Math.round(H * 0.058);
     ctx.font = fs2 + 'px "Hiragino Sans", "Meiryo", sans-serif';
     ctx.fillStyle = '#333';
@@ -168,7 +282,6 @@
     wrapText(ctx, message, msgBox.x, msgBox.y, msgBox.w, fs2 * 1.7);
     ctx.restore();
 
-    // 送り主
     var fs3 = Math.round(H * 0.058);
     ctx.font = fs3 + 'px "Hiragino Sans", "Meiryo", sans-serif';
     ctx.fillStyle = '#555';
@@ -177,22 +290,18 @@
     ctx.fillText(sender, senderBox.x, senderBox.y);
 
     document.getElementById('btnDownload').disabled = false;
-
-    if (window.innerWidth < 769) {
+    if (window.innerWidth < 834) {
       document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
     }
   }
 
-  // --- 保存 ---
   function downloadCard() {
     canvas.toBlob(function(blob) {
       var file = new File([blob], 'birthday_card.jpg', { type: 'image/jpeg' });
-
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({ files: [file] }).catch(function() {});
         return;
       }
-
       var link = document.createElement('a');
       link.download = 'birthday_card.jpg';
       link.href = URL.createObjectURL(blob);
@@ -200,6 +309,5 @@
     }, 'image/jpeg', 0.92);
   }
 </script>
-
 </body>
 </html>
